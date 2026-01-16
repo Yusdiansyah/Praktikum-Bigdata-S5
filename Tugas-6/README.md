@@ -116,3 +116,80 @@ Hasil Dari linear regression:
 Koefisien: [1399.9999999996287,-37.49999999983759]
 Intercept: 4062.499999997129
 ```
+## K-Means
+1. Buat data 
+```py
+from pyspark.ml.clustering import KMeans
+
+data_mall = [
+ (15, 39), (16, 81), (17, 6), (18, 77), (19, 40), # Grup Acak
+ (50, 50), (55, 55), (60, 60), # Grup Menengah
+ (100, 90), (110, 95), (120, 88) # Grup Kaya & Boros
+]
+df_mall = spark.createDataFrame(data_mall, ["pendapatan", "skor"])
+```
+2. Buat juga vector assemblernya
+```py
+assembler_cluster = VectorAssembler(inputCols=["pendapatan", "skor"],
+outputCol="features")
+data_siap_cluster = assembler_cluster.transform(df_mall)
+```
+3. Buat K-means dengan K=3
+```py
+kmeans = KMeans().setK(3).setSeed(1)
+model_km = kmeans.fit(data_siap_cluster)
+```
+4. Buat K-means dengan K=2
+```py
+kmeans_2 = KMeans().setK(2).setSeed(1)
+model_km_2 = kmeans_2.fit(data_siap_cluster)
+```
+5. Prediksi untuk masing-masing setK
+```py
+# K=3
+prediksi_cluster = model_km.transform(data_siap_cluster)
+print("Hasil Pengelompokan (Prediction adalah nomor cluster):")
+prediksi_cluster.show()
+
+#K=2
+prediksi_cluster_2 = model_km_2.transform(data_siap_cluster)
+print("Hasil Pengelompokan dengan K=2:")
+prediksi_cluster_2.show()
+```
+6. Lihat dan bandingkan pusat clusternya
+```py
+#K=3
+centers = model_km.clusterCenters()
+print("Pusat Cluster (Centroids):")
+for i, center in enumerate(centers):
+ print(f"Cluster {i}: {center}")
+
+#K=2
+centers_2 = model_km_2.clusterCenters()
+print("Pusat Cluster (K=2):")
+for i, center in enumerate(centers_2):
+    print(f"Cluster {i}: {center}")
+```
+7. Hasil
+```txt
+K=3
+Pusat Cluster (Centroids):
+Cluster 0: [110.  91.]
+Cluster 1: [17.  48.6]
+Cluster 2: [55. 55.]
+
+K=2
+Pusat Cluster (Centroids):
+Cluster 0: [110.  91.]
+Cluster 1: [31.25 51.  ]
+```
+Dari perbandingan ini dapat disimpulkan bahwa cluster K=3 sebelumnya kira-kira terbagi menjadi:
+- Kelompok 0: Pendapatan rendah, skor rendah
+- Kelompok 1: Pendapatan tinggi, skor tinggi
+- Kelompok 2: Pendapatan menengah, skor menengah
+
+Sedangkan K=2, dua cluster kemungkinan besar akan membagi data menjadi:
+- Cluster 0: Data dengan pendapatan rendah–menengah + skor rendah–menengah
+- Cluster 1: Data dengan pendapatan tinggi + skor tinggi
+
+Artinya, tidak persis "Kaya" vs "Miskin", karena ada data pendapatan menengah yang mungkin masuk ke salah satu cluster tergantung kedekatannya dengan centroid.
