@@ -107,6 +107,6 @@ plt.xlabel("Depth")
 plt.ylabel("Frekuensi")
 plt.show()
 ```
-Hasil :
-![visualisasi depth](histogramdepth.png)
+Hasil : <br>
+![visualisasi depth](histogramdepth.png) <br>
 Dapat dilihat bahwa hasil distribusinya mendekati 'Normal' dengan satu puncak utama bukan bimodal
